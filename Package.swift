@@ -11,17 +11,17 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "swiftformat",
-            url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.49.16/swiftformat.artifactbundle.zip",
-            checksum: "b935247c918d0f45ee35e4e42e840fc55cd2461d0db2673b26d47c03a0ffd3f6"
+            url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.49.18/swiftformat.artifactbundle.zip",
+            checksum: "47e8ecd01fca0ea3c21029a0ea53b3dff4eb712e6164c5c796e4c74c7facf073"
 
         ),
         .plugin(name: "SwiftFormat",
-                capability: .command(
-                    intent: .sourceCodeFormatting(),
-                    permissions: [
-                        .writeToPackageDirectory(reason: "This command reformats source files"),
-                    ]
-                ),
-                dependencies: [.target(name: "swiftformat")]),
+        capability: .command(
+            intent: .sourceCodeFormatting(),
+            permissions: [
+                .writeToPackageDirectory(reason: "This command reformats source files"),
+            ]
+        ),
+        dependencies: [.target(name: "swiftformat")]),
     ]
 )
