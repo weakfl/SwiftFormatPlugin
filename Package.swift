@@ -17,7 +17,10 @@ let package = Package(
         ),
         .plugin(name: "SwiftFormat",
         capability: .command(
-            intent: .sourceCodeFormatting(),
+            intent: .custom(
+              verb: "swiftformat",
+              description: "Formats source code"
+            ),
             permissions: [
                 .writeToPackageDirectory(reason: "This command reformats source files"),
             ]
