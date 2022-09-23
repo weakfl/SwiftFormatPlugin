@@ -5,26 +5,32 @@ import PackageDescription
 let package = Package(
     name: "SwiftFormatPlugin",
     products: [
+        .plugin(name: "SwiftFormatPlugin", targets: ["SwiftFormatPlugin"]),
         .plugin(name: "SwiftFormat", targets: ["SwiftFormat"]),
     ],
     dependencies: [],
     targets: [
+        .plugin(
+            name: "SwiftFormatPlugin",
+            capability: .buildTool(),
+            dependencies: ["swiftformat"]
+        ),
+        .plugin(
+            name: "SwiftFormat",
+            capability: .command(
+                intent: .custom(
+                    verb: "swiftformat",
+                    description: "Formats source code"
+                ),
+                permissions: [
+                    .writeToPackageDirectory(reason: "This command reformats source files"),
+                ]
+            ),
+            dependencies: [.target(name: "swiftformat")]
+        ),
         .binaryTarget(
             name: "swiftformat",
-            url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.49.18/swiftformat.artifactbundle.zip",
-            checksum: "47e8ecd01fca0ea3c21029a0ea53b3dff4eb712e6164c5c796e4c74c7facf073"
-
-        ),
-        .plugin(name: "SwiftFormat",
-        capability: .command(
-            intent: .custom(
-              verb: "swiftformat",
-              description: "Formats source code"
-            ),
-            permissions: [
-                .writeToPackageDirectory(reason: "This command reformats source files"),
-            ]
-        ),
-        dependencies: [.target(name: "swiftformat")]),
+            path: "./swiftformat.artifactbundle"
+        )
     ]
 )
