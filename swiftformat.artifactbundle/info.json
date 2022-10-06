@@ -2,11 +2,11 @@
     "schemaVersion": "1.0",
     "artifacts": {
         "swiftformat": {
-            "version": "0.50.0",
+            "version": "0.50.1",
             "type": "executable",
             "variants": [
                 {
-                    "path": "swiftformat-0.50.0-macos/bin/swiftformat",
+                    "path": "swiftformat-0.50.1-macos/bin/swiftformat",
                     "supportedTriples": ["x86_64-apple-macosx", "arm64-apple-macosx"]
                 }
             ]
