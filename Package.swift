@@ -30,7 +30,8 @@ let package = Package(
         ),
         .binaryTarget(
             name: "swiftformat",
-            path: "./swiftformat.artifactbundle"
+            url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.50.5/swiftformat.artifactbundle.zip",
+            checksum: "da64d8546805e5e7ee5b0df3f2b4c889d7a692b2a26331b07a5e6f62f0ed8331"
         )
     ]
 )
