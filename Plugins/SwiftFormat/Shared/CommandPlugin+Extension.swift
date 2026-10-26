@@ -6,7 +6,7 @@ extension CommandPlugin {
         let tool = try context.tool(named: "swiftformat")
         let toolURL = URL(fileURLWithPath: tool.path.string)
 
-        var processArguments = [directory.string]
+        var processArguments = [directory.string, "--cache", context.pluginWorkDirectory.appending("swiftformat.cache").string]
         processArguments.append(contentsOf: arguments)
 
         let process = Process()

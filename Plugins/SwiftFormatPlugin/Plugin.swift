@@ -23,8 +23,9 @@ struct SwiftFormatPlugin: BuildToolPlugin {
             return []
         }
 
-        // Clear the SwiftFormat plugin's directory (in case of dangling files)
-        fileManager.forceClean(directory: context.pluginWorkDirectory)
+        // Clear the SwiftFormat plugin's output directory (in case of dangling files)
+        fileManager.forceClean(directory: context.pluginWorkDirectory.outputDirectory)
+        fileManager.ensureDirectory(context.pluginWorkDirectory.cacheDirectory)
 
         return try configurations.map { configuration in
             try .swiftformat(using: configuration, context: context, target: target)
@@ -49,8 +50,9 @@ extension SwiftFormatPlugin: XcodeBuildToolPlugin {
             return []
         }
 
-        // Clear the SwiftFormat plugin's directory (in case of dangling files)
-        fileManager.forceClean(directory: context.pluginWorkDirectory)
+        // Clear the SwiftFormat plugin's output directory (in case of dangling files)
+        fileManager.forceClean(directory: context.pluginWorkDirectory.outputDirectory)
+        fileManager.ensureDirectory(context.pluginWorkDirectory.cacheDirectory)
 
         return try configurations.map { configuration in
             try .swiftformat(using: configuration, context: context, target: target)
@@ -99,15 +101,16 @@ private extension Command {
             executable: try context.tool(named: "swiftformat").path,
             arguments: [
                 "--config", "\(configuration)",
+                "--cache", "\(context.pluginWorkDirectory.cacheDirectory.appending("swiftformat.cache"))",
                 target.directory
             ],
             environment: [
                 "PROJECT_DIR": context.package.directory,
                 "TARGET_NAME": target.name,
                 "PRODUCT_MODULE_NAME": target.moduleName,
-                "DERIVED_SOURCES_DIR": context.pluginWorkDirectory
+                "DERIVED_SOURCES_DIR": context.pluginWorkDirectory.outputDirectory
             ],
-            outputFilesDirectory: context.pluginWorkDirectory
+            outputFilesDirectory: context.pluginWorkDirectory.outputDirectory
         )
     }
 
@@ -118,14 +121,15 @@ private extension Command {
             executable: try context.tool(named: "swiftformat").path,
             arguments: [
                 "--config", "\(configuration)",
+                "--cache", "\(context.pluginWorkDirectory.cacheDirectory.appending("swiftformat.cache"))",
                 context.xcodeProject.directory
             ],
             environment: [
                 "PROJECT_DIR": context.xcodeProject.directory,
                 "TARGET_NAME": target.displayName,
-                "DERIVED_SOURCES_DIR": context.pluginWorkDirectory
+                "DERIVED_SOURCES_DIR": context.pluginWorkDirectory.outputDirectory
             ],
-            outputFilesDirectory: context.pluginWorkDirectory
+            outputFilesDirectory: context.pluginWorkDirectory.outputDirectory
         )
     }
     #endif
@@ -135,8 +139,21 @@ private extension FileManager {
     /// Re-create the given directory
     func forceClean(directory: Path) {
         try? removeItem(atPath: directory.string)
-        try? createDirectory(atPath: directory.string, withIntermediateDirectories: false)
+        try? createDirectory(atPath: directory.string, withIntermediateDirectories: true)
     }
+
+    /// Create the given directory if it doesn't exist
+    func ensureDirectory(_ directory: Path) {
+        try? createDirectory(atPath: directory.string, withIntermediateDirectories: true)
+    }
+}
+
+private extension Path {
+    /// Directory for the build command's outputs, cleared before every build
+    var outputDirectory: Path { appending("Output") }
+
+    /// Directory for the tool's cache, kept across builds
+    var cacheDirectory: Path { appending("Cache") }
 }
 
 extension Target {
