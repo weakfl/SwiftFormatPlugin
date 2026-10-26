@@ -2,10 +2,11 @@ name: Update SwiftFormat
 
 on:
   schedule:
-    - cron: "23 6 * * *"
+    - cron: "23 * * * *"
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -86,3 +87,9 @@ jobs:
             gh release create "$tag" --title "$tag" \
               --notes "${UPSTREAM#*/} [${tag#v}](https://github.com/$UPSTREAM/releases/tag/${tag#v})"
           done
+
+      - name: Keep schedule enabled
+        # GitHub disables scheduled workflows after 60 days without repository activity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/update.yml/enable"

@@ -10,7 +10,7 @@ Forked from [MarcoEidinger/SwiftFormatPlugin](https://github.com/MarcoEidinger/S
 - **Format on build**: a build tool plugin formats your code before every build, not just on demand.
 - **One config for the whole project**: in an Xcode project, both plugins format the entire project directory with the `.swiftformat` at its root, including local packages that live inside it.
 - **Local dependencies included**: `--target X` also formats the targets X depends on within the same package.
-- **Always current**: a [daily workflow](.github/workflows/update.yml) picks up new SwiftFormat releases. Each version is tagged `vX.Y.Z` and matches the [SwiftFormat release](https://github.com/nicklockwood/SwiftFormat/releases) of the same number.
+- **Always current**: an [hourly workflow](.github/workflows/update.yml) picks up new SwiftFormat releases. Each version is tagged `vX.Y.Z` and matches the [SwiftFormat release](https://github.com/nicklockwood/SwiftFormat/releases) of the same number.
 
 ## Installation
 
