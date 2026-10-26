@@ -1,0 +1,83 @@
+name: Update SwiftFormat
+
+on:
+  schedule:
+    - cron: "23 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-swiftformat
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Update to new upstream releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM: nicklockwood/SwiftFormat
+          ASSET: swiftformat.artifactbundle.zip
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          set -euo pipefail
+
+          current=$(sed -nE 's|.*/releases/download/([0-9]+\.[0-9]+\.[0-9]+)/.*|\1|p' Package.swift)
+          echo "Current version: $current"
+
+          # Upstream releases newer than the current version, oldest first
+          versions=$(gh release list -R "$UPSTREAM" --exclude-drafts --exclude-pre-releases -L 50 --json tagName --jq '.[].tagName' \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            | { cat; echo "$current"; } | sort -uV | sed -n "/^${current//./\\.}\$/,\$p" | tail -n +2)
+
+          if [ -z "$versions" ]; then
+            echo "Already up to date."
+            exit 0
+          fi
+
+          new_tags=()
+          for version in $versions; do
+            if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+              echo "Tag v$version already exists, skipping."
+              continue
+            fi
+
+            digest=$(gh release view "$version" -R "$UPSTREAM" --json assets \
+              --jq ".assets[] | select(.name == \"$ASSET\") | .digest // \"none\"")
+            if [ -z "$digest" ]; then
+              # Upstream sometimes attaches assets after publishing; stop here to keep versions in order
+              echo "::warning::$version has no $ASSET yet, retrying next run."
+              break
+            fi
+
+            dir="$RUNNER_TEMP/$version"
+            gh release download "$version" -R "$UPSTREAM" -p "$ASSET" -D "$dir"
+            checksum=$(shasum -a 256 "$dir/$ASSET" | cut -d' ' -f1)
+            if [ "$digest" != "none" ] && [ "$digest" != "sha256:$checksum" ]; then
+              echo "::error::Checksum mismatch for $version: $checksum vs $digest"
+              exit 1
+            fi
+
+            sed -E \
+              -e "s|(/releases/download/)[^/]+/|\1$version/|" \
+              -e "s|(checksum: \")[^\"]*\"|\1$checksum\"|" \
+              Package.swift > Package.swift.tmp
+            mv Package.swift.tmp Package.swift
+
+            git commit -qam "update v$version"
+            git tag "v$version"
+            new_tags+=("v$version")
+            echo "Updated to $version ($checksum)"
+          done
+
+          if [ ${#new_tags[@]} -gt 0 ]; then
+            git push --atomic origin HEAD:main "${new_tags[@]/#/refs/tags/}"
+          fi
