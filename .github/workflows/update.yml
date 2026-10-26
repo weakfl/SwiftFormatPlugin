@@ -81,3 +81,8 @@ jobs:
           if [ ${#new_tags[@]} -gt 0 ]; then
             git push --atomic origin HEAD:main "${new_tags[@]/#/refs/tags/}"
           fi
+
+          for tag in "${new_tags[@]}"; do
+            gh release create "$tag" --title "$tag" \
+              --notes "${UPSTREAM#*/} [${tag#v}](https://github.com/$UPSTREAM/releases/tag/${tag#v})"
+          done
