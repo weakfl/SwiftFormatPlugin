@@ -1,47 +1,69 @@
 # SwiftFormatPlugin
 
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FMarcoEidinger%2FSwiftFormatPlugin%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/MarcoEidinger/SwiftFormatPlugin)
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FMarcoEidinger%2FSwiftFormatPlugin%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/MarcoEidinger/SwiftFormatPlugin)
+Swift Package Manager plugins for [SwiftFormat](https://github.com/nicklockwood/SwiftFormat), using the prebuilt SwiftFormat binary.
 
-A Swift Package Plugin to format source code with [SwiftFormat](https://github.com/nicklockwood/SwiftFormat).
+Forked from [MarcoEidinger/SwiftFormatPlugin](https://github.com/MarcoEidinger/SwiftFormatPlugin), which is no longer maintained.
 
-## Add to Package
+## Why this fork
 
-Add the package to your dependencies.
+- **Fast builds**: SwiftFormat ships as a prebuilt binary, so it doesn't get compiled from source (unlike depending on `nicklockwood/SwiftFormat` directly).
+- **Format on build**: a build tool plugin formats your code before every build, not just on demand.
+- **One config for the whole project**: in an Xcode project, both plugins format the entire project directory with the `.swiftformat` at its root, including local packages that live inside it.
+- **Local dependencies included**: `--target X` also formats the targets X depends on within the same package.
+- **Always current**: a [daily workflow](.github/workflows/update.yml) picks up new SwiftFormat releases. Each version is tagged `vX.Y.Z` and matches the [SwiftFormat release](https://github.com/nicklockwood/SwiftFormat/releases) of the same number.
+
+## Installation
 
 ```swift
 dependencies: [
-    // ...
-    .package(url: "https://github.com/MarcoEidinger/SwiftFormatPlugin", from: "0.49.16"),
+    .package(url: "https://github.com/weakfl/SwiftFormatPlugin", from: "0.64.3"),
 ]
 ```
 
-Note: the version matches a [SwiftFormat release](https://github.com/nicklockwood/SwiftFormat/releases).
+## Configuration
 
-## Run Plugin
+Both plugins read a `.swiftformat` file:
 
-### SPM
+| Context       | Config lookup                                  |
+| ------------- | ---------------------------------------------- |
+| Swift package | package root and/or the target's directory     |
+| Xcode project | project root                                   |
 
-```bash
-swift package plugin --allow-writing-to-package-directory format-source-code
+The build tool plugin fails the build if no config is found. If both the package root and the target directory contain one, SwiftFormat runs once per config.
+
+## Build tool plugin: `SwiftFormatPlugin`
+
+Formats code before each build.
+
+### Swift package
+
+```swift
+.target(
+    name: "MyLibrary",
+    plugins: [.plugin(name: "SwiftFormatPlugin", package: "SwiftFormatPlugin")]
+)
 ```
 
-You can limit the formatting to a particular target with `--target` option.
+This formats the target's directory.
 
-You can also specify SwiftFormat arguments such as `--swiftversion`.
+### Xcode project
 
-Example
+Add `SwiftFormatPlugin` under the target's *Build Phases → Run Build Tool Plug-ins*. This formats the whole project directory.
+
+## Command plugin: `SwiftFormat`
+
+Formats code on demand.
+
+### Swift package
 
 ```bash
-swift package plugin --allow-writing-to-package-directory format-source-code --target MyLibrary --swiftversion 5.6 --verbose
+swift package --allow-writing-to-package-directory swiftformat
 ```
 
-### Xcode
+- Without `--target`, every target is formatted.
+- `--target MyLibrary` formats `MyLibrary` plus its local dependencies. Pass it multiple times to select more targets.
+- Any other arguments go to SwiftFormat, e.g. `--swift-version 6.0` or `--lint`.
 
-In Xcode 14 you can trigger the command plugin execution for a Swift package or an Xcode project.
+### Xcode project
 
-For an Xcode project the project's main directory will be processed and the `--target` option will be ignored.
-
-You can also specify SwiftFormat arguments such as `--swiftversion`.
-
-![Run plugin in Xcode 14](https://user-images.githubusercontent.com/4176826/179352584-db7f7f42-452c-4a42-a329-01b115a237a7.gif)
+Right-click the project in the navigator and choose *SwiftFormat*. The whole project directory is formatted, and `--target` is ignored.
