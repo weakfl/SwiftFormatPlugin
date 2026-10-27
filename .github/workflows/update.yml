@@ -73,6 +73,9 @@ jobs:
               Package.swift > Package.swift.tmp
             mv Package.swift.tmp Package.swift
 
+            sed -E "s|(\.package\(url: \"[^\"]+\", from: \")[^\"]+\"|\1$version\"|" README.md > README.md.tmp
+            mv README.md.tmp README.md
+
             git commit -qam "update v$version"
             git tag "v$version"
             new_tags+=("v$version")
