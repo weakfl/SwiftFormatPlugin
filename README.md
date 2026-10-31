@@ -16,7 +16,7 @@ Forked from [MarcoEidinger/SwiftFormatPlugin](https://github.com/MarcoEidinger/S
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/weakfl/SwiftFormatPlugin", from: "0.64.4"),
+    .package(url: "https://github.com/weakfl/SwiftFormatPlugin", from: "0.64.5"),
 ]
 ```
 
